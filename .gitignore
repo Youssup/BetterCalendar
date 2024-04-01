@@ -161,6 +161,7 @@ cython_debug/
 
 # Added .env that stores secrets
 .env
-# Added token.json and credentials.json that stores google api credentials
-token.json
+# Added token.json, credentials.json, config.py that stores google api credentials
+token.pickle
 credentials.json
+config.py
