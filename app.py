@@ -45,7 +45,7 @@ def getLocation(address):
         return "None"
 
 # Get the travel time from the user's location to the event location
-def get_directions(origin, destination):
+def getDirections(origin, destination):
     params = {
         'origin': origin,
         'destination': destination,
@@ -59,7 +59,7 @@ def get_directions(origin, destination):
     else:
         if "missing the 'destination' parameter." in json:
             print("Error: Missing destination parameter.")
-        print("Error: Something went wrong. Could not get travel time.")
+        print("Error: Something went wrong. Could not get location from event.")
         return 0
 
 # Add reminder to event 
@@ -94,7 +94,7 @@ if datetime.now(pytz.utc) > upcomingEvent.start:
     upcomingEvent = next(events)
 userLocation = setLocation(upcomingEvent)
 eventLocation = upcomingEvent.location
-travelTime = get_directions(userLocation, eventLocation)
+travelTime = getDirections(userLocation, eventLocation)
 variation = setVariation(upcomingEvent)
 addReminder(upcomingEvent, travelTime + variation)
 if eventLocation == None:
