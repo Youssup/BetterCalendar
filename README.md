@@ -1,6 +1,6 @@
 # BetterCalendar
 
-This is Better Calendar! A program that connects to your Google Calendar, designed to make your scheudling experience as easy as possible. It automatically sets reminders for upcoming events, so you never have to worry about when you shoud leave for your next appointment. 
+## This is Better Calendar! A program that connects to your Google Calendar, designed to make your scheudling experience as easy as possible. It automatically sets reminders for upcoming events, so you never have to worry about when you shoud leave for your next appointment. 
 
 ## Why?
 
