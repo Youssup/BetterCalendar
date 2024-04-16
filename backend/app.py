@@ -1,18 +1,25 @@
-import config
-# API key
-import requests
-# API calls
-import pytz 
-# For adjusting time
-import re
-# regex for parsing event description
+# Importing flask
+from flask import Flask, request, jsonify, redirect
 
+# Imports for application functionality
+# API calls
+import requests
+# API key
+import config as config
+# For adjusting time
+import pytz
+# regex for parsing event description
+import re
+
+# GCSA API for Google Calendar integration + time manipulation
 from gcsa.google_calendar import GoogleCalendar
 from gcsa.event import Event
 from gcsa.reminders import EmailReminder, PopupReminder
 from beautiful_date import *
 from datetime import datetime
-# Google calendar + time manipulation
+
+app = Flask(__name__)
+gc = None
 
 # Get the user's location
 def getUserLocation():
@@ -68,7 +75,7 @@ def getDirections(origin, destination):
         print("Error: Could not get location from event.")
         return 0
 
-# Add reminder to event 
+# Add reminder to event
 def addReminder(event, reminder):
     emailReminder = EmailReminder(minutes_before_start=reminder)
     popupReminder = PopupReminder(minutes_before_start=reminder)
@@ -81,14 +88,13 @@ def addReminder(event, reminder):
         reminders=[emailReminder, popupReminder],
         event_id=event.event_id
     )
-    #event.reminders = [EmailReminder(minutes_before_start=reminder), PopupReminder(minutes_before_start=reminder)]
     gc.update_event(updatedEvent)
 
 # Parse event's description to find user variation
 def setVariation(event):
     keyword = "!Extra Time: "
     description = event.description
-    if(description == None or keyword not in description):
+    if (description == None or keyword not in description):
         return 0
     else:
         variation = re.search(f'{keyword}(.*?)!', description)
@@ -101,7 +107,7 @@ def setVariation(event):
 def setLocation(event):
     keyword = "!Default Location: "
     description = event.description
-    if(description == None or keyword not in description):
+    if (description == None or keyword not in description):
         return getUserLocation()
     else:
         location = re.search(f'{keyword}(.*?)!', description)
@@ -110,27 +116,67 @@ def setLocation(event):
             return location.strip()
         else:
             return "Error: Could not get location from event description."
+
+@app.route('/', methods=['GET'])
+def homeRoute():
+    return "test"
+
+@app.route('/login', methods=['POST'])
+def loginRoute():
+    global gc
+    gc = GoogleCalendar(credentials_path='.credentials/credentials.json', save_token=True)
+    return jsonify({'message': 'Login successful'})
+
+# Gets the user's location
+@app.route('/getUserLocation', methods=['GET'])
+def getUserLocationRoute():
+    return jsonify(getUserLocation())
     
-gc = GoogleCalendar(credentials_path='.credentials/credentials.json', save_token=True)
-events = gc.get_events(order_by='startTime', single_events=True, time_min=D.now(), time_max=D.now() + 7*days)
-upcomingEvent = next(events)
-upcomingEventDescription = upcomingEvent.description
-if datetime.now(pytz.utc) > upcomingEvent.start:
+# Gets the longitude and latitude values of the address
+@app.route('/getLocation', methods=['GET'])
+def getLocationRoute():
+    return jsonify(getLocation())
+    
+# Gets the travel time from the user's location to the event location
+@app.route('/getDirections', methods=['GET'])
+def getDirectionsRoute():
+    origin = request.args.get('origin')
+    destination = request.args.get('destination')
+    return jsonify(getDirections(origin, destination))
+
+@app.route('/addReminder', methods=['GET'])
+def addReminderRoute():
+    event = request.args.get('event')
+    reminder = request.args.get('reminder')
+    return jsonify(addReminder(event, reminder))
+
+@app.route('/setVariation', methods=['GET'])
+def setVariationRoute():
+    event = request.args.get('event')
+    return jsonify(setVariation(event))
+
+@app.route('/setLocation', methods=['GET'])
+def setLocationRoute():
+    event = request.args.get('event')
+    return jsonify(setLocation(event))
+
+@app.route('/run', methods=['GET'])
+def runRoute():
+    res = requests.post('http://127.0.0.1:5000/login')
+    events = gc.get_events(order_by='startTime', single_events=True,time_min=D.now(), time_max=D.now() + 7*days)
     upcomingEvent = next(events)
-userLocation = setLocation(upcomingEvent)
-eventLocation = upcomingEvent.location
-travelTime = getDirections(userLocation, eventLocation)
-variation = setVariation(upcomingEvent)
-addReminder(upcomingEvent, travelTime + variation)
-if eventLocation == None:
-    print("Could not get event location.")
-    eventLocation = "None"
-print(f"{userLocation} to {eventLocation} will take {travelTime} minutes. You will be notified {variation} minutes before you have to leave.")
+    upcomingEventDescription = upcomingEvent.description
+    if datetime.now(pytz.utc) > upcomingEvent.start:
+        upcomingEvent = next(events)
+    userLocation = setLocation(upcomingEvent)
+    eventLocation = upcomingEvent.location
+    travelTime = getDirections(userLocation, eventLocation)
+    variation = setVariation(upcomingEvent)
+    addReminder(upcomingEvent, travelTime + variation)
+    if eventLocation == None:
+        print("Could not get event location.")
+        eventLocation = "None"
+    return f"Success: {userLocation} to {eventLocation} will take {travelTime} minutes. You will be notified {variation} minutes before you have to leave."
 
-# To choose additional time, user must follow the following format
-# !Extra Time: (# of minutes)!
-# -1000 return means there was an invalid input
-# To set the user's location for an event, user must follow the following format
-# !Default Location: (Address of location)!
-
-# Bugs
+if __name__ == '__main__':
+    app.run(debug=True)
