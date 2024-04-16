@@ -1,12 +1,18 @@
 import config
+# API key
 import requests
-import pytz
+# API calls
+import pytz 
+# For adjusting time
+import re
+# regex for parsing event description
 
 from gcsa.google_calendar import GoogleCalendar
 from gcsa.event import Event
 from gcsa.reminders import EmailReminder, PopupReminder
 from beautiful_date import *
 from datetime import datetime
+# Google calendar + time manipulation
 
 # Get the user's location
 def getUserLocation():
@@ -45,7 +51,7 @@ def getLocation(address):
         return "None"
 
 # Get the travel time from the user's location to the event location
-def get_directions(origin, destination):
+def getDirections(origin, destination):
     params = {
         'origin': origin,
         'destination': destination,
@@ -59,13 +65,24 @@ def get_directions(origin, destination):
     else:
         if "missing the 'destination' parameter." in json:
             print("Error: Missing destination parameter.")
-        print("Error: Something went wrong. Could not get travel time.")
+        print("Error: Could not get location from event.")
         return 0
 
 # Add reminder to event 
 def addReminder(event, reminder):
-    event.reminders = [EmailReminder(minutes_before_start=reminder), PopupReminder(minutes_before_start=reminder)]
-    gc.update_event(event)
+    emailReminder = EmailReminder(minutes_before_start=reminder)
+    popupReminder = PopupReminder(minutes_before_start=reminder)
+    updatedEvent = Event(
+        event.summary,
+        start=event.start,
+        end=event.end,
+        description=event.description,
+        location=event.location,
+        reminders=[emailReminder, popupReminder],
+        event_id=event.event_id
+    )
+    #event.reminders = [EmailReminder(minutes_before_start=reminder), PopupReminder(minutes_before_start=reminder)]
+    gc.update_event(updatedEvent)
 
 # Parse event's description to find user variation
 def setVariation(event):
@@ -74,8 +91,11 @@ def setVariation(event):
     if(description == None or keyword not in description):
         return 0
     else:
-        variation = description.split(keyword,1)[1].split('!',1)[0].strip()
-        return int(variation)
+        variation = re.search(f'{keyword}(.*?)!', description)
+        if variation:
+            return int(variation.group(1).strip())
+        else:
+            return -1000
 
 # Sets the user's location
 def setLocation(event):
@@ -84,7 +104,12 @@ def setLocation(event):
     if(description == None or keyword not in description):
         return getUserLocation()
     else:
-        return description.split(keyword,1)[1].split('!',1)[0].strip()
+        location = re.search(f'{keyword}(.*?)!', description)
+        location = re.sub('<.*?>', '', location.group(1))
+        if location:
+            return location.strip()
+        else:
+            return "Error: Could not get location from event description."
     
 gc = GoogleCalendar(credentials_path='.credentials/credentials.json', save_token=True)
 events = gc.get_events(order_by='startTime', single_events=True, time_min=D.now(), time_max=D.now() + 7*days)
@@ -94,7 +119,7 @@ if datetime.now(pytz.utc) > upcomingEvent.start:
     upcomingEvent = next(events)
 userLocation = setLocation(upcomingEvent)
 eventLocation = upcomingEvent.location
-travelTime = get_directions(userLocation, eventLocation)
+travelTime = getDirections(userLocation, eventLocation)
 variation = setVariation(upcomingEvent)
 addReminder(upcomingEvent, travelTime + variation)
 if eventLocation == None:
@@ -103,6 +128,9 @@ if eventLocation == None:
 print(f"{userLocation} to {eventLocation} will take {travelTime} minutes. You will be notified {variation} minutes before you have to leave.")
 
 # To choose additional time, user must follow the following format
-# !Extra Time: (# of minutes)
+# !Extra Time: (# of minutes)!
+# -1000 return means there was an invalid input
 # To set the user's location for an event, user must follow the following format
-# !Default Location: (Address of location)
+# !Default Location: (Address of location)!
+
+# Bugs
