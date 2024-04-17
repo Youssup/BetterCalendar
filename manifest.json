@@ -1,0 +1,22 @@
+{
+    "manifest_version": 2,
+    "name": "Better Calendar",
+    "version": "1.1.0",
+    "description": "Better Calendar is an application that automatically sets reminders for upcoming events based on the user's location and event's location.",
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["contentScript.js"]
+      }
+    ],
+    "browser_action": {
+      "default_popup": "popup.html"
+    },
+    "action": {
+        "default_popup": "popup.html"
+        }
+  }
+  

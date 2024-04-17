@@ -121,7 +121,7 @@ def setLocation(event):
 def homeRoute():
     return "test"
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET'])
 def loginRoute():
     global gc
     gc = GoogleCalendar(credentials_path='.credentials/credentials.json', save_token=True)
@@ -162,7 +162,6 @@ def setLocationRoute():
 
 @app.route('/run', methods=['GET'])
 def runRoute():
-    res = requests.post('http://127.0.0.1:5000/login')
     events = gc.get_events(order_by='startTime', single_events=True,time_min=D.now(), time_max=D.now() + 7*days)
     upcomingEvent = next(events)
     upcomingEventDescription = upcomingEvent.description
@@ -174,9 +173,8 @@ def runRoute():
     variation = setVariation(upcomingEvent)
     addReminder(upcomingEvent, travelTime + variation)
     if eventLocation == None:
-        print("Could not get event location.")
-        eventLocation = "None"
-    return f"Success: {userLocation} to {eventLocation} will take {travelTime} minutes. You will be notified {variation} minutes before you have to leave."
+        return jsonify("Error: Could not get event location.")
+    return jsonify(f"Success: {userLocation} to {eventLocation} will take {travelTime} minutes. You will be notified {variation} minutes before you have to leave.")
 
 if __name__ == '__main__':
     app.run(debug=True)
