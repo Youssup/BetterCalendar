@@ -2,7 +2,7 @@ import React from 'react';
 
 function Home() {
   const runApp = () => {
-    window.location.href = 'http://127.0.0.1:5000/run';
+    window.open('http://127.0.0.1:5000/run', '_blank', 'noopener,noreferrer');
   };
 
   return (
