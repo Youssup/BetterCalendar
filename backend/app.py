@@ -1,5 +1,7 @@
 # Importing flask
 from flask import Flask, request, jsonify, redirect
+# importing CORS
+from flask_cors import CORS
 
 # Imports for application functionality
 # API calls
@@ -19,6 +21,7 @@ from beautiful_date import *
 from datetime import datetime
 
 app = Flask(__name__)
+CORS(app)
 gc = None
 
 # Get the user's location
