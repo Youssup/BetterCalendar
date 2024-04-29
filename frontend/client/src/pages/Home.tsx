@@ -1,17 +1,17 @@
 import React from 'react';
 
-function App() {
+function Home() {
   const runApp = () => {
     window.location.href = 'http://127.0.0.1:5000/run';
   };
 
   return (
-    <div className="App">
+    <div className="flex justify-center">
       <button className="btn btn-primary" onClick={runApp}>
-        Log in with Google
+        Run the application
       </button>
     </div>
   );
 }
 
-export default App;
+export default Home;
