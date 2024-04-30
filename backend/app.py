@@ -168,7 +168,6 @@ def runRoute():
     res = requests.post('http://127.0.0.1:5000/login')
     events = gc.get_events(order_by='startTime', single_events=True,time_min=D.now(), time_max=D.now() + 7*days)
     upcomingEvent = next(events)
-    upcomingEventDescription = upcomingEvent.description
     if datetime.now(pytz.utc) > upcomingEvent.start:
         upcomingEvent = next(events)
     userLocation = setLocation(upcomingEvent)
