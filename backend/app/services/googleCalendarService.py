@@ -10,7 +10,7 @@ from beautiful_date import *
 
 class GoogleCalendarService:
     def __init__(self):
-        self.gc = GoogleCalendar(credentials_path=app.config['CREDENTIALS_PATH'], save_token=True)
+        self.gc = None
 
     def get_user_location(self):
         params = {'key': app.config['GOOGLE_API_KEY']}
@@ -51,6 +51,7 @@ class GoogleCalendarService:
             return 0
 
     def run(self):
+        self.gc = GoogleCalendar(credentials_path=app.config['CREDENTIALS_PATH'], save_token=True)
         events = self.gc.get_events(order_by='startTime', single_events=True, time_min=D.now(), time_max=D.now() + 7*days)
         upcoming_event = next(events)
         if datetime.now(pytz.utc) > upcoming_event.start:
