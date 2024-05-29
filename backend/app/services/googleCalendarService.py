@@ -10,9 +10,6 @@ from beautiful_date import *
 
 class GoogleCalendarService:
     def __init__(self):
-        self.gc = None
-
-    def login(self):
         self.gc = GoogleCalendar(credentials_path=app.config['CREDENTIALS_PATH'], save_token=True)
 
     def get_user_location(self):
