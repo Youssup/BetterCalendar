@@ -50,7 +50,29 @@ class GoogleCalendarService:
         else:
             return 0
 
-    def run(self):
+    def runOnApp(self, variation, defaultLocation):
+        self.gc = GoogleCalendar(credentials_path=app.config['CREDENTIALS_PATH'], save_token=True)
+        events = self.gc.get_events(order_by='startTime', single_events=True, time_min=D.now(), time_max=D.now() + 7*days)
+        upcoming_event = next(events)
+        if datetime.now(pytz.utc) > upcoming_event.start:
+            upcoming_event = next(events)
+        user_location = None
+        if(defaultLocation):
+            user_location = defaultLocation
+        else:
+            user_location = self.get_user_location()
+        event_location = upcoming_event.location
+        travel_time = self.get_directions(user_location, event_location)
+        if(variation==None):
+            variation = 0
+        else:
+            variation = int(variation)
+        self.add_reminder(upcoming_event, travel_time + variation)
+        if event_location == None:
+            event_location = "None"
+        return f"Success: {user_location} to {event_location} will take {travel_time} minutes. You will be notified {variation} minutes before you have to leave."
+    
+    def runOnGoogle(self):
         self.gc = GoogleCalendar(credentials_path=app.config['CREDENTIALS_PATH'], save_token=True)
         events = self.gc.get_events(order_by='startTime', single_events=True, time_min=D.now(), time_max=D.now() + 7*days)
         upcoming_event = next(events)
