@@ -23,6 +23,10 @@ function Home() {
       });
   };
 
+  const runOnGoogle = () => {
+    window.open('http://localhost:5000/runOnGoogle', '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -38,6 +42,11 @@ function Home() {
           </button>
         </div>
       </form>
+      <div className="flex justify-center">
+        <button className="btn btn-primary mt-4" onClick={runOnGoogle}>
+          Run on Google
+        </button>
+      </div>
     </div>
 
   );
