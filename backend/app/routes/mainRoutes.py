@@ -23,6 +23,12 @@ def get_directions_route():
     destination = request.args.get('destination')
     return jsonify(gcService.get_directions(origin, destination))
 
-@mainBP.route('/run', methods=['GET'])
-def run_route():
-    return gcService.run()
+@mainBP.route('/runOnGoogle', methods=['GET'])
+def run_on_google_route():
+    return gcService.runOnGoogle()
+
+@mainBP.route('/runOnApp', methods=['GET'])
+def run_on_app_route():
+    variation = request.args.get('variation')
+    defaultLocation = request.args.get('defaultLocation')
+    return gcService.runOnApp(variation, defaultLocation)
